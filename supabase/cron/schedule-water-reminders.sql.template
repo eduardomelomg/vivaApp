@@ -1,0 +1,29 @@
+-- Substitua os três marcadores antes de executar no SQL Editor.
+create extension if not exists pg_cron with schema pg_catalog;
+create extension if not exists pg_net with schema extensions;
+
+select vault.create_secret('__PROJECT_URL__', 'viva_project_url');
+select vault.create_secret('__PUBLISHABLE_KEY__', 'viva_publishable_key');
+select vault.create_secret('__CRON_SECRET__', 'viva_cron_secret');
+
+select cron.unschedule(jobid)
+from cron.job
+where jobname = 'viva-water-reminders';
+
+select cron.schedule(
+  'viva-water-reminders',
+  '* * * * *',
+  $$
+  select net.http_post(
+    url := (select decrypted_secret from vault.decrypted_secrets where name = 'viva_project_url' order by created_at desc limit 1)
+      || '/functions/v1/send-water-reminders',
+    headers := jsonb_build_object(
+      'Content-Type', 'application/json',
+      'apikey', (select decrypted_secret from vault.decrypted_secrets where name = 'viva_publishable_key' order by created_at desc limit 1),
+      'Authorization', 'Bearer ' || (select decrypted_secret from vault.decrypted_secrets where name = 'viva_cron_secret' order by created_at desc limit 1)
+    ),
+    body := jsonb_build_object('scheduled_at', now()),
+    timeout_milliseconds := 10000
+  ) as request_id;
+  $$
+);
