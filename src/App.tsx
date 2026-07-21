@@ -229,7 +229,7 @@ export default function App() {
       const resolved = theme === 'system' ? (media.matches ? 'dark' : 'light') : theme
       document.documentElement.dataset.theme = resolved
       document.documentElement.style.colorScheme = resolved
-      document.querySelector<HTMLMetaElement>('meta[name="theme-color"]')?.setAttribute('content', resolved === 'dark' ? '#0b1d1c' : '#102a2a')
+      document.querySelector<HTMLMetaElement>('meta[name="theme-color"]')?.setAttribute('content', resolved === 'dark' ? '#0a1710' : '#12291f')
     }
     apply()
     media.addEventListener('change', apply)
