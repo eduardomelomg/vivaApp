@@ -37,11 +37,11 @@ export function getPlantState(events: PointsEvent[], points: number): PlantState
   const last = dates[dates.length - 1]
   const daysInactive = Math.max(0, dayNumber(today) - dayNumber(last))
   if (daysInactive > 0) {
-    if (daysInactive >= 30) return { stage, health: 'sem_vida', label: 'Sem vida', message: 'Volte hoje para fazer nascer um novo broto.', daysInactive, recoveryDays: 0 }
-    if (daysInactive >= 14) return { stage, health: 'seca', label: 'Planta seca', message: 'Ela precisa da sua rotina para se recuperar.', daysInactive, recoveryDays: 0 }
-    if (daysInactive >= 7) return { stage, health: 'amarelada', label: 'Folhas amareladas', message: 'Um hábito hoje já inicia a recuperação.', daysInactive, recoveryDays: 0 }
-    if (daysInactive >= 3) return { stage, health: 'murchando', label: 'Começando a murchar', message: 'Cuide dela completando uma atividade.', daysInactive, recoveryDays: 0 }
-    return { stage, health: 'saudavel', label: 'Saudável', message: 'Ela aguenta uma pausa curta. Volte quando puder.', daysInactive, recoveryDays: 0 }
+    if (daysInactive >= 30) return { stage, health: 'sem_vida', label: 'Adormecida', message: 'Sua planta está te esperando com carinho. Um cuidado hoje faz um novo broto despontar.', daysInactive, recoveryDays: 0 }
+    if (daysInactive >= 14) return { stage, health: 'seca', label: 'Com sede', message: 'Ela sente sua falta. Um único hábito hoje já a deixa firme de novo.', daysInactive, recoveryDays: 0 }
+    if (daysInactive >= 7) return { stage, health: 'amarelada', label: 'Pedindo água', message: 'Um hábito hoje já começa a reanimar as folhas.', daysInactive, recoveryDays: 0 }
+    if (daysInactive >= 3) return { stage, health: 'murchando', label: 'Sentindo sua falta', message: 'Que tal cuidar dela com uma atividade rápida? Ela volta fácil.', daysInactive, recoveryDays: 0 }
+    return { stage, health: 'saudavel', label: 'Tranquila', message: 'Ela aguenta bem uma pausa curta. Volte quando puder, sem pressa.', daysInactive, recoveryDays: 0 }
   }
 
   let streak = 1

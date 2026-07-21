@@ -24,6 +24,9 @@ export interface Profile {
   gymType: GymType
   homeSetup: HomeSetup
   hiitReady: boolean
+  parq?: Partial<Record<import('./hiit-gate').ParqKey, boolean>>
+  parqWarmup?: boolean
+  parqStop?: boolean
   limitations: string
 }
 
