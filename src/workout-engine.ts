@@ -158,7 +158,14 @@ function prescription(level: FitnessLevel, goal: Goal, key: string, home = false
   return `${sets}× ${reps}`
 }
 
-export function generateWorkoutPlan(profile: Profile): GeneratedPlan {
+const lowImpactNames: Record<string, string> = {
+  hiit: 'Caminhada rápida ou marcha no lugar',
+  cardio: 'Cardio leve contínuo (marcha ou bicicleta suave)',
+  cardioLong: 'Caminhada tranquila',
+}
+
+export function generateWorkoutPlan(profile: Profile, opts: { lowImpact?: boolean } = {}): GeneratedPlan {
+  const lowImpact = opts.lowImpact === true
   const place = profile.trainingPlace || (profile.equipment === 'casa' || profile.equipment === 'halteres' ? 'casa' : 'academia')
   const equipment: Equipment = place === 'casa'
     ? (profile.homeSetup === 'halteres' ? 'halteres' : 'casa')
@@ -168,31 +175,36 @@ export function generateWorkoutPlan(profile: Profile): GeneratedPlan {
   const names = exerciseNames[equipment]
   const homeDuration = level === 'iniciante' ? 20 : level === 'intermediario' ? 25 : 30
   const duration = place === 'casa' ? homeDuration : (profile.sessionMinutes || 45)
-  const levelLabel = level === 'iniciante' ? 'Nível 1 · Base intensa' : level === 'intermediario' ? 'Nível 2 · Ritmo forte' : 'Nível 3 · Alta performance'
-  const effort = level === 'iniciante' ? 'RPE 7–8/10' : level === 'intermediario' ? 'RPE 8/10' : 'RPE 8–9/10'
+  const levelLabel = lowImpact ? 'Baixo impacto · no seu ritmo' : level === 'iniciante' ? 'Nível 1 · Base intensa' : level === 'intermediario' ? 'Nível 2 · Ritmo forte' : 'Nível 3 · Alta performance'
+  const effort = lowImpact ? 'RPE 3–4/10 · leve' : level === 'iniciante' ? 'RPE 7–8/10' : level === 'intermediario' ? 'RPE 8/10' : 'RPE 8–9/10'
   const selected = (place === 'casa' ? homeSplits : gymSplits)[days]
+  const isCardioKey = (key: string) => key === 'hiit' || key.startsWith('cardio')
 
   return {
-    title: place === 'casa' ? 'Treino dividido em casa' : profile.goal === 'ganhar' ? 'Hipertrofia por grupos musculares' : 'Treino dividido por grupos musculares',
-    summary: `${days} dias por semana · ${duration} min · ${levelLabel} · divisão muscular · ${place === 'casa' ? 'HIIT e isometrias' : profile.gymType === 'bairro' ? 'estrutura básica' : 'estrutura completa'}`,
-    progression: place === 'casa'
-      ? (level === 'iniciante' ? 'Complete pelo menos 8 sessões no Nível 1 antes de avançar. Mantenha esforço 7–8/10 e preserve a execução.' : level === 'intermediario' ? 'Avance depois de 8 sessões concluídas sem sintomas e com recuperação adequada.' : 'Mantenha esforço 8–9/10; esforço máximo não é necessário para validar a sessão.')
-      : (level === 'iniciante' ? 'Nas 2 primeiras semanas, priorize técnica. Quando concluir todas as repetições com facilidade, aumente a carga mínima disponível.' : 'Ao atingir o topo das repetições em todas as séries, aumente 2–5% da carga na sessão seguinte.'),
+    title: lowImpact ? 'Treino de baixo impacto' : place === 'casa' ? 'Treino dividido em casa' : profile.goal === 'ganhar' ? 'Hipertrofia por grupos musculares' : 'Treino dividido por grupos musculares',
+    summary: lowImpact
+      ? `${days} dias por semana · ${duration} min · sem HIIT · ritmo controlado e seguro`
+      : `${days} dias por semana · ${duration} min · ${levelLabel} · divisão muscular · ${place === 'casa' ? 'HIIT e isometrias' : profile.gymType === 'bairro' ? 'estrutura básica' : 'estrutura completa'}`,
+    progression: lowImpact
+      ? 'Alternativa segura enquanto o HIIT não é liberado. Priorize amplitude confortável e respiração tranquila; procure avaliação médica antes de retomar o alta intensidade.'
+      : place === 'casa'
+        ? (level === 'iniciante' ? 'Complete pelo menos 8 sessões no Nível 1 antes de avançar. Mantenha esforço 7–8/10 e preserve a execução.' : level === 'intermediario' ? 'Avance depois de 8 sessões concluídas sem sintomas e com recuperação adequada.' : 'Mantenha esforço 8–9/10; esforço máximo não é necessário para validar a sessão.')
+        : (level === 'iniciante' ? 'Nas 2 primeiras semanas, priorize técnica. Quando concluir todas as repetições com facilidade, aumente a carga mínima disponível.' : 'Ao atingir o topo das repetições em todas as séries, aumente 2–5% da carga na sessão seguinte.'),
     levelLabel,
     effort,
-    sessionStructure: place === 'casa' ? (level === 'iniciante' ? '4 min aquecimento · 9 min circuito · 4 min finisher · 3 min desaceleração' : level === 'intermediario' ? '5 min aquecimento · 10 min circuito · 6 min finisher · 4 min desaceleração' : '5 min aquecimento · 13 min circuito · 8 min finisher · 4 min desaceleração') : undefined,
+    sessionStructure: lowImpact ? '5 min aquecimento · 15 min ritmo leve · 5 min desaceleração' : place === 'casa' ? (level === 'iniciante' ? '4 min aquecimento · 9 min circuito · 4 min finisher · 3 min desaceleração' : level === 'intermediario' ? '5 min aquecimento · 10 min circuito · 6 min finisher · 4 min desaceleração' : '5 min aquecimento · 13 min circuito · 8 min finisher · 4 min desaceleração') : undefined,
     workouts: selected.map((template, index) => ({
-      id: `split-${equipment}-${days}-day-${index}`,
+      id: `split-${equipment}-${days}-day-${index}${lowImpact ? '-li' : ''}`,
       name: `Dia ${index + 1}`,
       focus: template.focus,
       duration,
       exercises: template.keys.map((key, exerciseIndex) => ({
         id: `${index}-${key}`,
-        name: names[key],
-        alternatives: exerciseAlternatives[equipment][key] || [],
-        prescription: prescription(level, profile.goal, key, place === 'casa'),
+        name: lowImpact && lowImpactNames[key] ? lowImpactNames[key] : names[key],
+        alternatives: lowImpact && isCardioKey(key) ? [] : exerciseAlternatives[equipment][key] || [],
+        prescription: lowImpact && isCardioKey(key) ? '5–10 min em ritmo confortável' : prescription(level, profile.goal, key, place === 'casa'),
         rest: key.startsWith('cardio') || key === 'hiit' ? 'conforme indicado' : level === 'iniciante' ? '60–90s' : '90–120s',
-        instruction: exerciseIndex === 0 ? 'Faça todo o aquecimento indicado antes de começar.' : key === 'hiit' ? 'Ritmo vigoroso: poucas palavras por vez, nunca ignore sintomas.' : 'Movimento controlado, sem dor e sem prender a respiração.',
+        instruction: exerciseIndex === 0 ? 'Faça todo o aquecimento indicado antes de começar.' : lowImpact ? 'Ritmo leve e confortável: você deve conseguir conversar durante o esforço.' : key === 'hiit' ? 'Ritmo vigoroso: poucas palavras por vez, nunca ignore sintomas.' : 'Movimento controlado, sem dor e sem prender a respiração.',
       })),
     })),
   }
