@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import './theme.css'
 import { StoreProvider, useStore } from './store'
+import { supabaseConfigurado } from './supabaseClient'
 import type { Papel } from './types'
 import { Dashboard } from './screens/Dashboard'
 import { PdvScreen, ProdutosScreen, InsumosScreen, MotoboysScreen, TabelasPrecoScreen } from './screens/Cadastros'
@@ -95,6 +96,9 @@ function Shell() {
         <div className="erp-topbar">
           <div />
           <div className="erp-user">
+            <span className="badge" title="Fonte de dados ativa" style={{ background: supabaseConfigurado ? 'var(--ciano)' : '#d9d2c5' }}>
+              {supabaseConfigurado ? 'Supabase' : 'Local (demo)'}
+            </span>
             <span>{usuario?.nome} · <strong>{usuario?.papel}</strong></span>
             <button className="btn ghost sm" onClick={resetar}>Resetar dados</button>
             <button className="btn ghost sm" onClick={logout}>Sair</button>
