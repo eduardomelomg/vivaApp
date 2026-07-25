@@ -7,6 +7,7 @@ import { PdvScreen, ProdutosScreen, InsumosScreen, MotoboysScreen, TabelasPrecoS
 import { PedidosScreen } from './screens/Pedidos'
 import { PrecificacaoScreen } from './screens/Precificacao'
 import { EntregasScreen } from './screens/Entregas'
+import { FinanceiroScreen } from './screens/Financeiro'
 import { MotoboyView } from './screens/MotoboyView'
 import { NotificacoesScreen } from './screens/Notificacoes'
 
@@ -27,6 +28,7 @@ const NAV: NavDef[] = [
   { chave: 'motoboys', rotulo: 'Motoboys', icone: '🛵', papeis: ['admin'] },
   { chave: 'precificacao', rotulo: 'Custos & Preços', icone: '📈', papeis: ['admin'] },
   { chave: 'entregas', rotulo: 'Entregas', icone: '🗺️', papeis: ['admin'] },
+  { chave: 'financeiro', rotulo: 'Financeiro', icone: '💰', papeis: ['admin'] },
   { chave: 'notificacoes', rotulo: 'Notificações', icone: '💬', papeis: ['admin'] },
   { chave: 'minhas-entregas', rotulo: 'Minhas entregas', icone: '🛵', papeis: ['motoboy'] },
 ]
@@ -68,6 +70,7 @@ function Shell() {
       case 'motoboys': return <MotoboysScreen />
       case 'precificacao': return <PrecificacaoScreen />
       case 'entregas': return <EntregasScreen />
+      case 'financeiro': return <FinanceiroScreen />
       case 'notificacoes': return <NotificacoesScreen />
       case 'minhas-entregas': return <MotoboyView />
       default: return <p className="muted">Selecione uma opção.</p>

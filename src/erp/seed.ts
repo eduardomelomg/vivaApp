@@ -81,6 +81,14 @@ export function seedData(): DadosERP {
     entregas: [
       { id: 'e-1', pedidoId: 'ped-1', motoboyId: 'm1', status: 'em_rota', ordemRota: 1, horaSaida: agora },
     ],
+    cobrancas: [
+      {
+        id: 'cob-1', pedidoId: 'ped-1', tipo: 'boleto', valor: 260, status: 'pendente',
+        urlDocumento: 'https://sandbox.exemplo/boleto/cob-1.pdf',
+        linhaDigitavel: '34191.79001 01043.510047 91020.150008 1 99990000026000',
+        vencimento: new Date(Date.now() + 3 * 864e5).toISOString(), criadoEm: agora,
+      },
+    ],
     notificacoes: [
       {
         id: 'n-1', pedidoId: 'ped-1', canal: 'evolution_whatsapp', tipo: 'resumo',

@@ -109,6 +109,23 @@ export interface Entrega {
   horaEntrega?: string
 }
 
+export type TipoCobranca = 'boleto' | 'pix' | 'recibo'
+export type StatusCobranca = 'pendente' | 'pago' | 'vencido' | 'cancelado'
+
+export interface Cobranca {
+  id: string
+  pedidoId: string
+  tipo: TipoCobranca
+  valor: number
+  status: StatusCobranca
+  urlDocumento?: string // link do boleto/recibo (gerado pelo gateway)
+  linhaDigitavel?: string // boleto
+  pixCopiaCola?: string // PIX
+  vencimento: string
+  criadoEm: string
+  pagoEm?: string
+}
+
 export interface Notificacao {
   id: string
   pedidoId: string
@@ -132,5 +149,6 @@ export interface DadosERP {
   motoboys: Motoboy[]
   pedidos: Pedido[]
   entregas: Entrega[]
+  cobrancas: Cobranca[]
   notificacoes: Notificacao[]
 }

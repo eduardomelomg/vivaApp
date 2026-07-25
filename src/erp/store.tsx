@@ -1,5 +1,6 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import type {
+  Cobranca,
   DadosERP,
   Entrega,
   Insumo,
@@ -58,6 +59,10 @@ interface StoreCtx {
   // Entregas
   atribuirEntrega: (pedidoId: string, motoboyId: string) => void
   mudarStatusEntrega: (id: string, status: Entrega['status']) => void
+  // Financeiro
+  gerarCobranca: (pedidoId: string, tipo: 'boleto' | 'pix') => void
+  confirmarPagamento: (cobrancaId: string) => void
+  mudarStatusCobranca: (cobrancaId: string, status: Cobranca['status']) => void
 }
 
 const Ctx = createContext<StoreCtx | null>(null)
@@ -279,6 +284,69 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
             notificacoes,
           }
         }),
+
+      gerarCobranca: (pedidoId, tipo) =>
+        upd((d) => {
+          const pedido = d.pedidos.find((p) => p.id === pedidoId)
+          if (!pedido) return d
+          const pdv = d.pontosVenda.find((x) => x.id === pedido.pdvId)
+          // Em produção: chamada ao gateway (Inter/Cora) parte do backend, nunca do frontend.
+          const cobranca: Cobranca = {
+            id: uid('cob'),
+            pedidoId,
+            tipo,
+            valor: pedido.valorTotal,
+            status: 'pendente',
+            vencimento: new Date(Date.now() + 3 * 864e5).toISOString(),
+            criadoEm: new Date().toISOString(),
+            urlDocumento: tipo === 'boleto' ? `https://sandbox.exemplo/boleto/${pedidoId}.pdf` : undefined,
+            linhaDigitavel:
+              tipo === 'boleto'
+                ? '34191.79001 01043.510047 91020.150008 1 ' +
+                  String(Math.round(pedido.valorTotal * 100)).padStart(14, '0')
+                : undefined,
+            pixCopiaCola:
+              tipo === 'pix'
+                ? `00020126BR.GOV.BCB.PIX${pedidoId}5204000053039865802BR${Math.round(pedido.valorTotal * 100)}`
+                : undefined,
+          }
+          return {
+            ...d,
+            cobrancas: [cobranca, ...d.cobrancas],
+            notificacoes: pdv
+              ? [
+                  enfileirarNotificacao({
+                    pedidoId,
+                    canal: 'evolution_whatsapp',
+                    tipo: tipo === 'boleto' ? 'boleto' : 'pix',
+                    destinatario: pdv.telefoneWhatsapp,
+                    mensagem:
+                      tipo === 'boleto'
+                        ? `Boleto do pedido ${pedidoId}: ${cobranca.urlDocumento}`
+                        : `PIX copia-e-cola do pedido ${pedidoId}: ${cobranca.pixCopiaCola}`,
+                  }),
+                  ...d.notificacoes,
+                ]
+              : d.notificacoes,
+          }
+        }),
+
+      // Simula o webhook assinado do gateway confirmando o pagamento.
+      confirmarPagamento: (cobrancaId) =>
+        upd((d) => ({
+          ...d,
+          cobrancas: d.cobrancas.map((c) =>
+            c.id === cobrancaId
+              ? { ...c, status: 'pago', pagoEm: new Date().toISOString() }
+              : c,
+          ),
+        })),
+
+      mudarStatusCobranca: (cobrancaId, status) =>
+        upd((d) => ({
+          ...d,
+          cobrancas: d.cobrancas.map((c) => (c.id === cobrancaId ? { ...c, status } : c)),
+        })),
     }),
     [dados, usuario, upd, enfileirarNotificacao],
   )
