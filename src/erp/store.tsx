@@ -18,13 +18,18 @@ import { seedData } from './seed'
 const STORAGE_KEY = 'brownie-erp-v1'
 
 function load(): DadosERP {
+  const base = seedData()
   try {
     const raw = localStorage.getItem(STORAGE_KEY)
-    if (raw) return JSON.parse(raw) as DadosERP
+    if (raw) {
+      // Mescla com o seed para tolerar dados salvos por versões anteriores
+      // que ainda não tinham todas as coleções (ex.: cobrancas).
+      return { ...base, ...(JSON.parse(raw) as Partial<DadosERP>) }
+    }
   } catch {
     /* ignora corrupção e recria o seed */
   }
-  return seedData()
+  return base
 }
 
 function uid(prefix: string): string {
